@@ -5,7 +5,7 @@ from OpenGL.GL.shaders import compileProgram, compileShader
 
 # Vertex Shader
 VERTEX_SHADER = """
-#version 330
+#version 150
 layout(location = 0) in vec3 position;
 void main() {
     gl_Position = vec4(position, 1.0);
@@ -14,7 +14,7 @@ void main() {
 
 # Fragment Shader
 FRAGMENT_SHADER = """
-#version 330
+#version 150
 out vec4 fragColor;
 void main() {
     fragColor = vec4(1.0, 0.0, 0.0, 1.0);  // Red color
