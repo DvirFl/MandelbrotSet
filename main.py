@@ -5,30 +5,51 @@ from OpenGL.GL.shaders import compileProgram, compileShader
 from OpenGL.GL import glGetString, GL_VERSION
 from OpenGL.GLUT import glutInit
 
+def loadTexture(imageName):
+    textureSurface = pygame.image.load(imageName)
+    textureData = pygame.image.tostring(textureSurface, "RGBA", 1)
+    width = textureSurface.get_width()
+    height = textureSurface.get_height()
+
+    texture = glGenTextures(1)
+    glBindTexture(GL_TEXTURE_2D, texture)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData)
+
+    return texture
 
 # Vertex Shader
 VERTEX_SHADER = """
 #version 120 
 attribute vec3 position;
+attribute vec2 texcoords;
+varying vec2 Texcoords;
+
 void main() {
     gl_Position = vec4(position, 1.0);
+    Texcoords = texcoords;
 }
 """
 
 # Fragment Shader
 FRAGMENT_SHADER = """
 #version 120 
-//out vec4 fragColor;
+varying vec2 Texcoords;
+uniform sampler2D tex;
+
 void main() {
-    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);  // Red color
+    gl_FragColor = texture2D(tex, Texcoords);
 }
 """
 
 def main():
-    glutInit()
+    # glutInit()
     pygame.init()
     display = (800, 600)
     pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
+
+
     print("OpenGL version:", glGetString(GL_VERSION).decode())
 
     # Compile shaders and program
@@ -39,22 +60,30 @@ def main():
 
     # Define vertices and buffer
     vertices = [
-        -1, -1, 0.0,
-         1, -1, 0.0,
-         -1, 1, 0.0,
-         1, -1, 0.0,
-         -1, 1, 0.0,
-         1,  1, 0.0,
-         
+    -1, -1, 0.0,  0.0, 0.0,  # Bottom left
+     1, -1, 0.0,  1.0, 0.0,  # Bottom right
+    -1,  1, 0.0,  0.0, 1.0,  # Top left
+     1, -1, 0.0,  1.0, 0.0,  # Bottom right
+    -1,  1, 0.0,  0.0, 1.0,  # Top left
+     1,  1, 0.0,  1.0, 1.0  # Top right
     ]
+    
     vertex_buffer = glGenBuffers(1)
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer)
     glBufferData(GL_ARRAY_BUFFER, (GLfloat * len(vertices))(*vertices), GL_STATIC_DRAW)
 
-    # Set the position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, None)
+    # Position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), ctypes.c_void_p(0))
     glEnableVertexAttribArray(0)
 
+    # Texture coord attribute
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), ctypes.c_void_p(12))
+    glEnableVertexAttribArray(1)
+
+        # Load texture
+    texture = loadTexture("res/textures/box0.bmp")
+    glBindTexture(GL_TEXTURE_2D, texture)
+    # glViewport(0, 0, 800, 600)
     # Main loop
     while True:
         for event in pygame.event.get():
@@ -63,6 +92,7 @@ def main():
                 quit()
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
         glUseProgram(shaderProgram)
         glDrawArrays(GL_TRIANGLES, 0, 6)
         pygame.display.flip()
