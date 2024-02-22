@@ -4,6 +4,7 @@ from OpenGL.GL import *
 from OpenGL.GL.shaders import compileProgram, compileShader
 from OpenGL.GL import glGetString, GL_VERSION
 from OpenGL.GLUT import glutInit
+import Scene
 
 def loadTexture(imageName):
     textureSurface = pygame.image.load(imageName)
@@ -37,9 +38,15 @@ FRAGMENT_SHADER = """
 #version 120 
 varying vec2 Texcoords;
 uniform sampler2D tex;
+uniform float radius;
+uniform float scale;
 
 void main() {
-    gl_FragColor = texture2D(tex, Texcoords);
+    if (distance(Texcoords, vec2(0.5, 0.5)) > radius) {
+        gl_FragColor = texture2D(tex, Texcoords);
+    }
+    else
+        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
 }
 """
 
@@ -48,7 +55,7 @@ def main():
     pygame.init()
     display = (800, 600)
     pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
-
+    # pygame.display.set_mode(display, DOUBLEBUF | OPENGL | pygame.SCALED)
 
     print("OpenGL version:", glGetString(GL_VERSION).decode())
 
@@ -60,11 +67,11 @@ def main():
 
     # Define vertices and buffer
     vertices = [
-    -1, -1, 0.0,  0.0, 0.0,  # Bottom left
-     1, -1, 0.0,  1.0, 0.0,  # Bottom right
-    -1,  1, 0.0,  0.0, 1.0,  # Top left
-     1, -1, 0.0,  1.0, 0.0,  # Bottom right
-    -1,  1, 0.0,  0.0, 1.0,  # Top left
+    0, 0, 0.0,  -1.0, -1.0,  # Bottom left
+     1, 0, 0.0,  1.0, -1.0,  # Bottom right
+     0,  1, 0.0,  -1.0, 1.0,  # Top left
+     1, 0, 0.0,  1.0, -1.0,  # Bottom right
+     0,  1, 0.0,  -1.0, 1.0,  # Top left
      1,  1, 0.0,  1.0, 1.0  # Top right
     ]
     
@@ -81,19 +88,22 @@ def main():
     glEnableVertexAttribArray(1)
 
         # Load texture
+    scn = Scene.Scene((0, 0), (0, 0), 1.0, (800, 600), (0, 0))
     texture = loadTexture("res/textures/box0.bmp")
     glBindTexture(GL_TEXTURE_2D, texture)
-    # glViewport(0, 0, 800, 600)
+    glViewport(0, 0, 800, 600)
     # Main loop
     while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-
+        # for event in pygame.event.get():
+        #     if event.type == pygame.QUIT:
+        #         pygame.quit()
+        #         quit()
+        scn.handle_events()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
         glUseProgram(shaderProgram)
+        # update uniforms of the shader program (Dvir, you can read about uniforms in the OpenGL documentation or ask chatGPT)
+        scn.set_uniforms(shaderProgram)
         glDrawArrays(GL_TRIANGLES, 0, 6)
         pygame.display.flip()
         pygame.time.wait(10)
