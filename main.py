@@ -6,7 +6,7 @@ from OpenGL.GL import glGetString, GL_VERSION
 from OpenGL.GLUT import glutInit
 import Scene
 
-def loadTexture(imageName):
+def loadTexture(imageName, dim=2):
     textureSurface = pygame.image.load(imageName)
     textureData = pygame.image.tostring(textureSurface, "RGBA", 1)
     width = textureSurface.get_width()
@@ -16,7 +16,10 @@ def loadTexture(imageName):
     glBindTexture(GL_TEXTURE_2D, texture)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData)
+    if dim == 2:
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData)
+    else:
+        glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, width, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData)
 
     return texture
 
@@ -34,15 +37,16 @@ void main() {
 """
 
 # Fragment Shader
-FRAGMENT_SHADER = """
+FRAGMENT_SHADER_1 = """
 #version 120 
 varying vec2 Texcoords;
 uniform sampler2D tex;
 uniform float radius;
 uniform float scale;
+uniform vec2 point;
 
 void main() {
-    if (distance(Texcoords, vec2(0.5, 0.5)) > radius) {
+    if (distance(Texcoords, point) > radius) {
         gl_FragColor = texture2D(tex, Texcoords);
     }
     else
@@ -50,10 +54,46 @@ void main() {
 }
 """
 
+FRAGMENT_SHADER_2 = """
+#version 120
+uniform sampler1D tex;
+uniform vec2 point;
+uniform float scale;
+uniform int iter;
+uniform float p;
+
+varying vec2 Texcoords;
+
+void main() {
+	vec2 z, c;
+    int levels = 1;
+
+	c.x = (Texcoords.x - 0.5) * scale - point.x;
+	c.y = (Texcoords.y - 0.5) * scale - point.y;
+
+	int i;
+	z = c;
+	for(i=0; i<iter; i++) {
+        float r = sqrt(z.x * z.x + z.y * z.y), angle = atan(z.y,z.x);     
+        float sn = sin(angle*p);
+        float cn = cos(angle*p);
+		float x = cn*pow(r,p) + c.x;
+		float y = sn*pow(r,p) + c.y;
+       // float x =  (z.x * z.x - z.y * z.y) + c.x;
+		//float y = (z.y * z.x + z.x * z.y) + c.y;
+		if((x * x + y * y) > 4.0) break;
+		z.x = x;
+		z.y = y;
+	}
+
+	gl_FragColor = texture1D(tex, (i == iter ? 0.0 : float(i)) / levels * 128.0f/iter);
+}
+"""
+
 def main():
     # glutInit()
     pygame.init()
-    display = (800, 600)
+    display = (800, 800)
     pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
     # pygame.display.set_mode(display, DOUBLEBUF | OPENGL | pygame.SCALED)
 
@@ -62,7 +102,7 @@ def main():
     # Compile shaders and program
     shaderProgram = compileProgram(
         compileShader(VERTEX_SHADER, GL_VERTEX_SHADER),
-        compileShader(FRAGMENT_SHADER, GL_FRAGMENT_SHADER)
+        compileShader(FRAGMENT_SHADER_1, GL_FRAGMENT_SHADER)
     )
 
     # Define vertices and buffer
@@ -88,10 +128,10 @@ def main():
     glEnableVertexAttribArray(1)
 
         # Load texture
-    scn = Scene.Scene((0, 0), (0, 0), 1.0, (800, 600), (0, 0))
+    scn = Scene.Scene((0, 0), (0, 0), 1.0, display, (0, 0))
     texture = loadTexture("res/textures/box0.bmp")
     glBindTexture(GL_TEXTURE_2D, texture)
-    glViewport(0, 0, 800, 600)
+    # glViewport(0, 0, 800, 600)
     # Main loop
     while True:
         # for event in pygame.event.get():
