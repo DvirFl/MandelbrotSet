@@ -5,6 +5,10 @@ from OpenGL.GL.shaders import compileProgram, compileShader
 from OpenGL.GL import glGetString, GL_VERSION
 from OpenGL.GLUT import glutInit
 import Scene
+import platform
+
+def is_mac_os():
+    return platform.system() == 'Darwin'
 
 def loadTexture(imageName, dim=2):
     textureSurface = pygame.image.load(imageName)
@@ -13,12 +17,15 @@ def loadTexture(imageName, dim=2):
     height = textureSurface.get_height()
 
     texture = glGenTextures(1)
-    glBindTexture(GL_TEXTURE_2D, texture)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
     if dim == 2:
+        glBindTexture(GL_TEXTURE_2D, texture)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData)
     else:
+        glBindTexture(GL_TEXTURE_1D, texture)
+        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, width, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData)
 
     return texture
@@ -102,28 +109,31 @@ def main():
     # Compile shaders and program
     shaderProgram = compileProgram(
         compileShader(VERTEX_SHADER, GL_VERTEX_SHADER),
-        compileShader(FRAGMENT_SHADER_1, GL_FRAGMENT_SHADER)
+        compileShader(FRAGMENT_SHADER_2, GL_FRAGMENT_SHADER)
     )
 
     # Define vertices and buffer
     #correct coordinates for windows
-    vertices = [
-    -1, -1, 0.0,  0.0, 0.0,  # Bottom left
-     1, -1, 0.0,  1.0, 0.0,  # Bottom right
-     -1,  1, 0.0,  0.0, 1.0,  # Top left
-     1, -1, 0.0,  1.0, 0.0,  # Bottom right
-     -1,  1, 0.0,  0.0, 1.0,  # Top left
-     1,  1, 0.0,  1.0, 1.0  # Top right
-    ]
+    if is_mac_os():
     #correct coordinates for mac
-    # vertices = [
-    # 0, 0, 0.0,  -1.0, -1.0,  # Bottom left
-    #  1, 0, 0.0,  1.0, -1.0,  # Bottom right
-    #  0,  1, 0.0,  -1.0, 1.0,  # Top left
-    #  1, 0, 0.0,  1.0, -1.0,  # Bottom right
-    #  0,  1, 0.0,  -1.0, 1.0,  # Top left
-    #  1,  1, 0.0,  1.0, 1.0  # Top right
-    # ]
+        vertices = [
+        0, 0, 0.0,  -1.0, -1.0,  # Bottom left
+        1, 0, 0.0,  1.0, -1.0,  # Bottom right
+        0,  1, 0.0,  -1.0, 1.0,  # Top left
+        1, 0, 0.0,  1.0, -1.0,  # Bottom right
+        0,  1, 0.0,  -1.0, 1.0,  # Top left
+        1,  1, 0.0,  1.0, 1.0  # Top right
+        ]
+    else:
+        vertices = [
+        -1, -1, 0.0,  0.0, 0.0,  # Bottom left
+        1, -1, 0.0,  1.0, 0.0,  # Bottom right
+        -1,  1, 0.0,  0.0, 1.0,  # Top left
+        1, -1, 0.0,  1.0, 0.0,  # Bottom right
+        -1,  1, 0.0,  0.0, 1.0,  # Top left
+        1,  1, 0.0,  1.0, 1.0  # Top right
+        ]
+    
     
     vertex_buffer = glGenBuffers(1)
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer)
@@ -138,14 +148,12 @@ def main():
     glEnableVertexAttribArray(1)
 
         # Load texture
-    scn = Scene.Scene((0, 0), (0, 0), 1.0, display, (0, 0))
-    texture = loadTexture("res/textures/box0.bmp")
+    scn = Scene.Scene((0, 0), (0, 0), 2, display, (0.0, 0.0))
+    # texture = loadTexture("res/textures/box0.bmp")
+    texture = loadTexture("res/textures/pal.bmp", 1)
 
-    background = pygame.image.load("res/textures/box0.bmp").convert()
-    background = pygame.transform.smoothscale(background, window.get_size())
-
-    glBindTexture(GL_TEXTURE_2D, texture)
-    # glViewport(0, 0, 800, 600)
+    # glBindTexture(GL_TEXTURE_2D, texture)
+    # glViewport(0, 0, 800, 800)
     # Main loop
     while True:
         # for event in pygame.event.get():
@@ -161,7 +169,7 @@ def main():
         glDrawArrays(GL_TRIANGLES, 0, 6)
         pygame.display.flip()
         pygame.time.wait(10)
-        window.blit(background, (0, 0))
+        
 
 if __name__ == '__main__':
     main()

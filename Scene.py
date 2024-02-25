@@ -6,13 +6,13 @@ from OpenGL.GL import *
 class Scene:
     def __init__(self, mouse_pos, prev_mouse_pos, scale, resolution, center):
         self.mouse_pos = np.array(mouse_pos)
-        self.prev_mouse_pos = prev_mouse_pos
+        self.prev_mouse_pos = np.array(prev_mouse_pos)
         self.scale = scale
         self.resolution = resolution
-        self.point = ( mouse_pos) / np.array(resolution) 
+        self.point = center
         self.radius = 0.1
         self.power = 2
-        self.iters_num = 100
+        self.iters_num = 120
         
         
     def handle_events(self):
@@ -24,20 +24,22 @@ class Scene:
                 case pygame.MOUSEMOTION:
                     self.mouse_pos = np.array(pygame.mouse.get_pos())
                     self.mouse_pos[1] =  self.resolution[1] - self.mouse_pos[1]
-                    self.point = (self.mouse_pos) / np.array(self.resolution) 
+                    self.point += (self.mouse_pos - self.prev_mouse_pos) / np.array(self.resolution)
+                    self.prev_mouse_pos = np.array(self.mouse_pos) 
                 case pygame.FINGERDOWN:
                     self.mouse_pos = np.array(pygame.mouse.get_pos())
                     self.mouse_pos[1] =  self.resolution[1] - self.mouse_pos[1]
-                    self.point = (self.mouse_pos) / np.array(self.resolution) 
+                    self.point -= (self.mouse_pos - self.prev_mouse_pos) / np.array(self.resolution)
+                    self.prev_mouse_pos = np.array(self.mouse_pos) 
                 case pygame.KEYDOWN:
                 
                     match event.key:
                         case pygame.K_UP:
-                            self.radius += 0.05
-                            print("radius plus:", self.radius)
+                            self.scale += 0.05
+                            print("radius plus:", self.scale)
                         case pygame.K_DOWN:
-                            self.radius -= 0.05
-                            print("radius minus:", self.radius)
+                            self.scale -= 0.05
+                            print("radius minus:", self.scale)
                         case pygame.K_ESCAPE:
                             pygame.quit()
                             quit()
@@ -47,6 +49,10 @@ class Scene:
 
     
     def set_uniforms(self, shaderProgram):
+        location = glGetUniformLocation(shaderProgram, 'p')
+        glUniform1f(location, self.power)
+        location = glGetUniformLocation(shaderProgram, 'iter')
+        glUniform1i(location, self.iters_num)
         location = glGetUniformLocation(shaderProgram, 'radius')
         glUniform1f(location, self.radius)
         location = glGetUniformLocation(shaderProgram, 'scale')
