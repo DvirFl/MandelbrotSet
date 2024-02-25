@@ -25,6 +25,10 @@ class Scene:
                     self.mouse_pos = np.array(pygame.mouse.get_pos())
                     self.mouse_pos[1] =  self.resolution[1] - self.mouse_pos[1]
                     self.point = (self.mouse_pos) / np.array(self.resolution) 
+                case pygame.FINGERDOWN:
+                    self.mouse_pos = np.array(pygame.mouse.get_pos())
+                    self.mouse_pos[1] =  self.resolution[1] - self.mouse_pos[1]
+                    self.point = (self.mouse_pos) / np.array(self.resolution) 
                 case pygame.KEYDOWN:
                 
                     match event.key:
