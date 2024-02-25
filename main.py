@@ -94,7 +94,7 @@ def main():
     # glutInit()
     pygame.init()
     display = (800, 800)
-    pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
+    window = pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
     # pygame.display.set_mode(display, DOUBLEBUF | OPENGL | pygame.SCALED)
 
     print("OpenGL version:", glGetString(GL_VERSION).decode())
@@ -106,14 +106,24 @@ def main():
     )
 
     # Define vertices and buffer
+    #correct coordinates for windows
     vertices = [
-    0, 0, 0.0,  -1.0, -1.0,  # Bottom left
-     1, 0, 0.0,  1.0, -1.0,  # Bottom right
-     0,  1, 0.0,  -1.0, 1.0,  # Top left
-     1, 0, 0.0,  1.0, -1.0,  # Bottom right
-     0,  1, 0.0,  -1.0, 1.0,  # Top left
+    -1, -1, 0.0,  0.0, 0.0,  # Bottom left
+     1, -1, 0.0,  1.0, 0.0,  # Bottom right
+     -1,  1, 0.0,  0.0, 1.0,  # Top left
+     1, -1, 0.0,  1.0, 0.0,  # Bottom right
+     -1,  1, 0.0,  0.0, 1.0,  # Top left
      1,  1, 0.0,  1.0, 1.0  # Top right
     ]
+    #correct coordinates for mac
+    # vertices = [
+    # 0, 0, 0.0,  -1.0, -1.0,  # Bottom left
+    #  1, 0, 0.0,  1.0, -1.0,  # Bottom right
+    #  0,  1, 0.0,  -1.0, 1.0,  # Top left
+    #  1, 0, 0.0,  1.0, -1.0,  # Bottom right
+    #  0,  1, 0.0,  -1.0, 1.0,  # Top left
+    #  1,  1, 0.0,  1.0, 1.0  # Top right
+    # ]
     
     vertex_buffer = glGenBuffers(1)
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer)
@@ -130,6 +140,10 @@ def main():
         # Load texture
     scn = Scene.Scene((0, 0), (0, 0), 1.0, display, (0, 0))
     texture = loadTexture("res/textures/box0.bmp")
+
+    background = pygame.image.load("res/textures/box0.bmp").convert()
+    background = pygame.transform.smoothscale(background, window.get_size())
+
     glBindTexture(GL_TEXTURE_2D, texture)
     # glViewport(0, 0, 800, 600)
     # Main loop
@@ -147,6 +161,7 @@ def main():
         glDrawArrays(GL_TRIANGLES, 0, 6)
         pygame.display.flip()
         pygame.time.wait(10)
+        window.blit(background, (0, 0))
 
 if __name__ == '__main__':
     main()
