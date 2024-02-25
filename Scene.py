@@ -17,26 +17,29 @@ class Scene:
         
     def handle_events(self):
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-            elif event.type == pygame.MOUSEMOTION:
-                self.mouse_pos = np.array(pygame.mouse.get_pos())
-                self.mouse_pos[1] =  self.resolution[1] - self.mouse_pos[1]
-                self.point = (self.mouse_pos) / np.array(self.resolution) 
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP:
-                    self.radius += 0.05
-                    print("radius plus:", self.radius)
-                elif event.key == pygame.K_DOWN:
-                    self.radius -= 0.05
-                    print("radius minus:", self.radius)
-                elif event.key == pygame.K_ESCAPE:
+            match event.type:
+                case pygame.QUIT:
                     pygame.quit()
                     quit()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                self.radius = 0.1
-                print("radius:", self.radius)
+                case pygame.MOUSEMOTION:
+                    self.mouse_pos = np.array(pygame.mouse.get_pos())
+                    self.mouse_pos[1] =  self.resolution[1] - self.mouse_pos[1]
+                    self.point = (self.mouse_pos) / np.array(self.resolution) 
+                case pygame.KEYDOWN:
+                
+                    match event.key:
+                        case pygame.K_UP:
+                            self.radius += 0.05
+                            print("radius plus:", self.radius)
+                        case pygame.K_DOWN:
+                            self.radius -= 0.05
+                            print("radius minus:", self.radius)
+                        case pygame.K_ESCAPE:
+                            pygame.quit()
+                            quit()
+                case pygame.MOUSEBUTTONDOWN:
+                    self.radius = 0.1
+                    print("radius:", self.radius)
 
     
     def set_uniforms(self, shaderProgram):
