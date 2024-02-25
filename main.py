@@ -32,7 +32,7 @@ def loadTexture(imageName, dim=2):
 
 # Vertex Shader
 VERTEX_SHADER = """
-#version 120 
+#version 410 
 attribute vec3 position;
 attribute vec2 texcoords;
 varying vec2 Texcoords;
@@ -45,12 +45,12 @@ void main() {
 
 # Fragment Shader
 FRAGMENT_SHADER_1 = """
-#version 120 
+#version 410 
 varying vec2 Texcoords;
 uniform sampler2D tex;
 uniform float radius;
 uniform float scale;
-uniform vec2 point;
+uniform dvec2 point;
 
 void main() {
     if (distance(Texcoords, point) > radius) {
@@ -62,7 +62,7 @@ void main() {
 """
 
 FRAGMENT_SHADER_2 = """
-#version 120
+#version 410
 uniform sampler1D tex;
 uniform vec2 point;
 uniform float scale;
@@ -104,6 +104,8 @@ def main():
     window = pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
     # pygame.display.set_mode(display, DOUBLEBUF | OPENGL | pygame.SCALED)
 
+    version = gl.glGetString(gl.GL_SHADING_LANGUAGE_VERSION)
+    print("Supported GLSL version:", version)
     print("OpenGL version:", glGetString(GL_VERSION).decode())
 
     # Compile shaders and program
