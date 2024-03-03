@@ -97,6 +97,34 @@ void main() {
 }
 """
 
+FRAGMENT_SHADER_3 = """
+#version 120
+
+varying vec2 Texcoords;
+uniform float scale; // uniform variable for scale
+
+void main()
+{
+    vec2 p = Texcoords * 2.0 - 1.0; // transform the coordinate to [-1, 1] range
+    vec3 col = vec3(1.0); // initial color (white)
+
+    // apply scale
+    p *= scale;
+
+    // scale and wrap the coordinates
+    p *= 1.5 / max(abs(p.x), abs(p.y));
+    
+    // determine if the current pixel is in a 'removed' area
+    for (int i = 0; i < 4; ++i) {
+        if (all(lessThan(fract(p * pow(5.0, float(i))), vec2(0.5))))
+            col *= 0.0; // make the pixel black
+        p = abs(p * 2.0) - 1.0;
+    }
+
+    gl_FragColor = vec4(col, 1.0);
+}
+"""
+
 def main():
     # glutInit()
     pygame.init()
